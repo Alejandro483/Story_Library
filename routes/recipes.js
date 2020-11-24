@@ -42,4 +42,45 @@ router.get('/', ensureAuth, async (req, res) => {
   
 })
 
+// @desc Show edit page
+// @route GET/recipes/edit/:id
+router.get('/edit/:id', ensureAuth, async (req, res) => {
+    const recipe = await Recipes.findOne({
+        _id: req.params.id
+    }).lean
+
+    if (!recipe) {
+        return res.render('error/404')
+    }
+
+    if (recipe.user != req.user.id) {
+        res.redirect('/recipes')
+    } else {
+        res.render('recipes/edit', {
+            recipe,
+        })
+    }
+})
+
+// @desc Update recipe
+// @route PUT/recipes/:id
+router.put('/:id', ensureAuth, async (req, res) => {
+    let recipe = await Recipes.findById(req.params.id).lean()
+
+    if (!recipe) {
+        return res.render('error/404')
+    }
+
+    if (recipe.user != req.user.id) {
+        res.redirect('/recipes')
+    } else {
+        recipe = await Recipes.findOneAndUpdate({ _id: req.params.id }, req.body, {
+            new: true,
+            runValidators: true
+        })
+        res.redirect('/dashboard')
+    
+    }
+})
+
 module.exports = router
